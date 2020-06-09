@@ -90,6 +90,7 @@ class AccionesHtml:
             if ValidacionesHTML.verificar_elemento_encontrado_por_id(
                     webdriver, constantes_webdriver_actions.
                             INICIAR_SESION_EN_OWA_ID_CHECKBOX_PORTAL_LIGHTWEIGHT_OWA_2010):
+
                 check_casilla_owa_2010_version_ligera = webdriver.find_element_by_id(
                     constantes_webdriver_actions.INICIAR_SESION_EN_OWA_ID_CHECKBOX_PORTAL_LIGHTWEIGHT_OWA_2010)
 
@@ -151,6 +152,7 @@ class AccionesHtml:
                         constantes_webdriver_actions.INICIAR_SESION_EN_OWA_XPATH_ERROR_CREDENCIALES_OWA_2010)
 
                     texto_mensaje_error = mensaje_error_de_credenciales.get_attribute('innerHTML')
+                    resultado.msg_error_de_credenciales = texto_mensaje_error
 
                     AccionesHtml.log.error(constantes_webdriver_actions.INICIAR_SESION_LOG_MSG_ERROR_CREDENCIALES_OWA.
                                            format(texto_mensaje_error))
@@ -159,6 +161,7 @@ class AccionesHtml:
                         INICIAR_SESION_LOG_MSG_ERROR_CREDENCIALES_OWA.format(texto_mensaje_error)
 
                     resultado.validacion_correcta = False
+                    resultado.error_inicio_de_sesion_credenciales_erroneas = True
 
                 elif AccionesHtml.owa_descubierto == 2016 or AccionesHtml.owa_descubierto == 2013:
 
@@ -172,7 +175,10 @@ class AccionesHtml:
                     resultado.mensaje_error = constantes_webdriver_actions. \
                         INICIAR_SESION_LOG_MSG_ERROR_CREDENCIALES_OWA.format(mensaje_error_de_credenciales)
 
+                    resultado.msg_error_de_credenciales = mensaje_error_de_credenciales
+
                     resultado.validacion_correcta = False
+                    resultado.error_inicio_de_sesion_credenciales_erroneas = True
 
             except selExcep.NoSuchElementException as e:
                 resultado.mensaje_error = constantes_json.OUTPUT_EXITOSO_1_1
@@ -199,10 +205,12 @@ class AccionesHtml:
         # plataforma en caso contrario se obtiene el mensaje del error y se establecer en el objeto resultado
 
         if ValidacionesHTML.verificar_error_plataforma(webdriver):
-            resultado.mensaje_error = constantes_webdriver_actions.INICIAR_SESION_MSG_ERROR_EN_PLATAFORMA.format(
-                AccionesHtml.txt_mensaje_error_encontrado_owa)
+            msg_error = ValidacionesHTML.obtener_mensaje_error_plataforma(webdriver)
+            resultado.mensaje_error = constantes_webdriver_actions.INICIAR_SESION_MSG_ERROR_EN_PLATAFORMA.\
+                format(msg_error)
 
             resultado.validacion_correcta = False
+            resultado.error_plataforma_inicio_de_sesion = True
 
         resultado.finalizar_tiempo_de_ejecucion()
         resultado.establecer_tiempo_de_ejecucion()
@@ -300,14 +308,39 @@ class AccionesHtml:
     # parametro el numero de segundos en que se estara ejecutando la navegacion entre carpetas (lo estipulado son
     # 2 min -> 120 s)
     @staticmethod
-    def navegacion_de_carpetas_por_segundos(lista_carpetas: list, driver: WebDriver, result_list: ValidacionResultList,
-                                            numero_de_segundos: int = 120):
+    def navegacion_de_carpetas_por_segundos(correo: Correo, lista_carpetas: list, driver: WebDriver,
+                                            result_list: ValidacionResultList, numero_de_segundos: int = 120):
 
         result_navegacion_carpetas = ResultStep()
         result_navegacion_carpetas.inicializar_tiempo_de_ejecucion()
         tiempo_por_verificar = numero_de_segundos + Temporizador.obtener_tiempo_timer()
         tiempo_de_inicio = Temporizador.obtener_tiempo_timer()
         segundos = 0
+
+        # verifica si se tiene error de credenciales, por lo cual si se tiene este error, se establece el mensaje
+        # de error y envia el result como finalizado, esto debido a que no se podra navegar entre carpetas por no
+        # estar loggeado y sin tener acceso al buzon de la plataforma
+        if result_list.result_validacion_acceso_portal_owa.error_inicio_de_sesion_credenciales_erroneas:
+            result_navegacion_carpetas.finalizar_tiempo_de_ejecucion()
+            result_navegacion_carpetas.establecer_tiempo_de_ejecucion()
+            result_navegacion_carpetas.validacion_correcta = False
+
+            result_navegacion_carpetas.mensaje_error = constantes_webdriver_actions.\
+                NAVEGACION_CARPETAS_SEG_MSG_ERROR_CREDENCIALES_OWA.format(
+                result_list.result_validacion_acceso_portal_owa.msg_error_de_credenciales)
+
+            result_list.result_validacion_navegacion_carpetas = result_navegacion_carpetas
+
+            AccionesHtml.log.error(constantes_webdriver_actions.NAVEGACION_CARPETAS_SEG_MSG_ERROR_CREDENCIALES_OWA.
+                                   format(result_list.result_validacion_acceso_portal_owa.msg_error_de_credenciales))
+
+            return result_list
+
+        # verifica si hay error en plataforma, en caso de ser asi, intenta realizar n intentos para volver a loggearse
+        # y verificar si ingreso correctamente al buzon de entrada para navegar entre las carpetas
+        if ValidacionesHTML.verificar_error_plataforma(driver):
+            result_navegacion_carpetas = ValidacionesHTML.intento_ingreso_nuevamente_al_portal(
+                result_navegacion_carpetas, correo, driver, step_evaluacion='Navegacion carpetas y buzon de entrada')
 
         # verifica se tenga al menos una carpeta
         if len(lista_carpetas) == 0:
@@ -331,8 +364,9 @@ class AccionesHtml:
             result_navegacion_carpetas.finalizar_tiempo_de_ejecucion()
             result_navegacion_carpetas.establecer_tiempo_de_ejecucion()
             result_navegacion_carpetas.validacion_correcta = False
+            msg_error = ValidacionesHTML.obtener_mensaje_error_plataforma(driver)
             result_navegacion_carpetas.mensaje_error = constantes_webdriver_actions. \
-                NAVEGACION_CARPETAS_SEG_MSG_ERROR_PLATAFORMA_OWA.format(AccionesHtml.txt_mensaje_error_encontrado_owa)
+                NAVEGACION_CARPETAS_SEG_MSG_ERROR_PLATAFORMA_OWA.format(msg_error)
 
             result_list.result_validacion_navegacion_carpetas = result_navegacion_carpetas
 
@@ -421,9 +455,10 @@ class AccionesHtml:
         # verifica que no haya algun mensaje de error en la plataforma, en caso contrario se muestra el mensaje de
         # error que aparace en la plataforma dentro del result
         if ValidacionesHTML.verificar_error_plataforma(driver):
+            msg_error = ValidacionesHTML.obtener_mensaje_error_plataforma(driver)
             result_navegacion_carpetas.validacion_correcta = False
             result_navegacion_carpetas.mensaje_error = constantes_webdriver_actions. \
-                NAVEGACION_CARPETAS_SEG_MSG_ERROR_PLATAFORMA_OWA.format(AccionesHtml.txt_mensaje_error_encontrado_owa)
+                NAVEGACION_CARPETAS_SEG_MSG_ERROR_PLATAFORMA_OWA.format(msg_error)
         else:
             result_navegacion_carpetas.validacion_correcta = True
             result_navegacion_carpetas.mensaje_error = constantes_json.OUTPUT_EXITOSO_2_1
@@ -433,12 +468,37 @@ class AccionesHtml:
         return result_list
 
     @staticmethod
-    def cerrar_sesion(webdriver: WebDriver, result_list: ValidacionResultList):
+    def cerrar_sesion(webdriver: WebDriver, result_list: ValidacionResultList, correo: Correo):
 
         timeout_cierre_sesion = 10
         resultado_cierre_sesion = ResultStep()
         resultado_cierre_sesion.inicializar_tiempo_de_ejecucion()
         cierre_sesion_exitosa = False
+
+        # verifica si se tiene error de credenciales, por lo cual si se tiene este error, se establece el mensaje
+        # de error y envia el result como finalizado, esto debido a que no puede localizar el boton de cierre de
+        # sesion sin antes haberse loggeado dentro de la plataforma
+        if result_list.result_validacion_acceso_portal_owa.error_inicio_de_sesion_credenciales_erroneas:
+            resultado_cierre_sesion.finalizar_tiempo_de_ejecucion()
+            resultado_cierre_sesion.establecer_tiempo_de_ejecucion()
+            resultado_cierre_sesion.validacion_correcta = False
+
+            resultado_cierre_sesion.mensaje_error = constantes_webdriver_actions.\
+                CERRAR_SESION_MSG_ERROR_CREDENCIALES_OWA.format(result_list.result_validacion_acceso_portal_owa.
+                                                                msg_error_de_credenciales)
+
+            result_list.result_validacion_cierre_sesion = resultado_cierre_sesion
+
+            AccionesHtml.log.error(constantes_webdriver_actions.CERRAR_SESION_MSG_ERROR_CREDENCIALES_OWA.format(
+                result_list.result_validacion_acceso_portal_owa.msg_error_de_credenciales))
+
+            return result_list
+
+        # verifica si hay error en plataforma, en caso de ser asi, intenta realizar n intentos para volver a loggearse
+        # y verificar si ingreso correctamente al buzon de entrada para navegar entre las carpetas
+        if ValidacionesHTML.verificar_error_plataforma(webdriver):
+            resultado_cierre_sesion = ValidacionesHTML.intento_ingreso_nuevamente_al_portal(
+                resultado_cierre_sesion, correo, webdriver, step_evaluacion='cierre de sesion')
 
         try:
             webdriver.refresh()
@@ -503,10 +563,10 @@ class AccionesHtml:
 
             # verifica que nos encontremos en la pagina de cierre de sesion del OWA verifica que el title de la pagina
             # contenfa Outlook
-            condicion_input_user_presente = EC.title_contains(constantes_webdriver_actions.
-                                                              CERRAR_SESION_TITLE_CIERRE_SESION)
+            condicion_contenido_en_title = EC.title_contains(constantes_webdriver_actions.
+                                                             CERRAR_SESION_TITLE_CIERRE_SESION)
 
-            WebDriverWait(webdriver, timeout_cierre_sesion).until(condicion_input_user_presente)
+            WebDriverWait(webdriver, timeout_cierre_sesion).until(condicion_contenido_en_title)
 
             cierre_sesion_exitosa = True
 
@@ -529,7 +589,7 @@ class AccionesHtml:
 
             time.sleep(2)
 
-            AccionesHtml.cerrar_sesion(webdriver, result_list)
+            AccionesHtml.cerrar_sesion(webdriver, result_list, correo)
 
         except selExcep.TimeoutException as e:
 
@@ -564,9 +624,10 @@ class AccionesHtml:
             # error que aparace en la plataforma dentro del result
             if ValidacionesHTML.verificar_error_plataforma(webdriver):
                 resultado_cierre_sesion.validacion_correcta = False
+                msg_error = ValidacionesHTML.obtener_mensaje_error_plataforma(webdriver)
 
                 resultado_cierre_sesion.mensaje_error = constantes_webdriver_actions.CERRAR_SESION_ERROR_PLATAFORMA. \
-                    format(AccionesHtml.txt_mensaje_error_encontrado_owa)
+                    format(msg_error)
 
                 cierre_sesion_exitosa = False
 

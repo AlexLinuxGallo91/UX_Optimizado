@@ -179,6 +179,9 @@ NAVEGACION_CARPETAS_SEG_LOG_ERROR_TIMEOUT_EXCEP = 'Se presenta error de tiempo d
 NAVEGACION_CARPETAS_SEG_LOG_ERROR_WEBDRIVER_EXCEP = 'Se presenta error del webdriver para la navegacion web dentro ' \
                                                 'de la plataforma OWA: {}'
 
+NAVEGACION_CARPETAS_SEG_MSG_ERROR_CREDENCIALES_OWA = 'Navegacion de carpetas e ingreso de bandeja no exitosa dentro ' \
+    'de la plataforma Exchange OWA, se presenta el siguiente mensaje de error de credenciales: {}'
+
 ########################################################################################################################
 ##                               Constantes AccionesHTML cerrar_sesion                                                ##
 ########################################################################################################################
@@ -219,3 +222,6 @@ CERRAR_SESION_ERROR_PLATAFORMA = 'Error al cerrar sesion dentro de la plataforma
 CERRAR_SESION_LOG_INFO_CIERRE_WEB_DRIVER = 'Prueba UX OWA finalizada, se procede a cerrar el webdriver'
 
 CERRAR_SESION_LOG_INFO_CIERRE_SESION_EXITOSA = 'Se cierra con exito la sesion dentro de la plataforma Exchange OWA'
+
+CERRAR_SESION_MSG_ERROR_CREDENCIALES_OWA = 'Cierre de sesion sin exito dentro de la plataforma Exchange OWA, se ' \
+    'presenta el siguiente mensaje de error de credenciales: {}'

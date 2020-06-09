@@ -36,10 +36,10 @@ def generar_test_json(driver, url_a_navegar, correo):
     lista_carpetas_por_navegar = AccionesHtml.obtener_carpetas_en_sesion(driver)
 
     # empieza la validacion de la navegacion en cada una de las carpetas que se obtuvieron en la linea anterior
-    lista_validaciones = AccionesHtml.navegacion_de_carpetas_por_segundos(lista_carpetas_por_navegar, driver,
+    lista_validaciones = AccionesHtml.navegacion_de_carpetas_por_segundos(correo, lista_carpetas_por_navegar, driver,
                                                                           lista_validaciones)
     # se valida el cierre de sesion desde el OWA
-    lista_validaciones = AccionesHtml.cerrar_sesion(driver, lista_validaciones)
+    lista_validaciones = AccionesHtml.cerrar_sesion(driver, lista_validaciones, correo)
 
     # establece los datos en el json con los resultados de cada una de las validaciones
     objeto_json = EvaluacionStepsJson.formar_cuerpo_json(lista_validaciones, objeto_json, correo)

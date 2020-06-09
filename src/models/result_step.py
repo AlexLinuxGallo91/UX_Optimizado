@@ -13,6 +13,18 @@ class ResultStep:
         self.datetime_final = ''
         self.numero_intentos_fallidos_reingreso_portal = 0
 
+        # bandera en caso de tener error por credenciales
+        self.error_inicio_de_sesion_credenciales_erroneas = False
+
+        # mensaje obteniedo en caso de tener error de credenciales
+        self.msg_error_de_credenciales = ''
+
+        # banderas en caso de haber realizado n intentos para ingresar a la bandeja de entrada
+        self.error_plataforma_inicio_de_sesion = False
+        self.error_plataforma_navegacion_entre_carpetas = False
+        self.error_plataforma_cierre_de_sesion = False
+
+
     def establecer_tiempo_de_ejecucion(self):
         tiempo_inicial = self.tiempo_inicio_de_ejecucion
         tiempo_final = self.tiempo_fin_de_ejecucion
@@ -36,6 +48,7 @@ class ResultStep:
         cadena += 'tiempo_total_de_la_ejecucion : {self.tiempo_total_de_la_ejecucion}\n'.format(self=self)
         cadena += 'datetime_inicial : {self.datetime_inicial}\n'.format(self=self)
         cadena += 'datetime_final : {self.datetime_final}\n'.format(self=self)
-        cadena += 'numero_intentos_fallidos_reingreso_portal : {self.numero_intentos_fallidos_reingreso_portal}\n'.format(self=self)
+        cadena += 'numero_intentos_fallidos_reingreso_portal : {self.numero_intentos_fallidos_reingreso_portal}\n'.\
+            format(self=self)
 
         return cadena
