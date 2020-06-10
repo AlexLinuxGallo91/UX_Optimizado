@@ -187,12 +187,13 @@ class ValidacionesHTML:
     def intento_ingreso_nuevamente_al_portal(result: ResultStep, correo: Correo, driver: WebDriver,
                                              numero_de_intentos_por_ingresar: int = 3, step_evaluacion: str = ''):
 
-        ValidacionesHTML.log.info('Se presentan problemas para el paso {}. se realizaran {} intentos para ingresar '
-            'nuevamente al portal Exchange OWA'.format(step_evaluacion, numero_de_intentos_por_ingresar))
+        ValidacionesHTML.log.info('Se presentan problemas para la validacion de {}. se realizaran {} intentos '
+            'para ingresar nuevamente al portal Exchange OWA'.format(step_evaluacion, numero_de_intentos_por_ingresar))
 
         for intento in range(numero_de_intentos_por_ingresar):
-            ValidacionesHTML.log.info('Se realizara el intento numero {} para ingresar al buzon de entrada de la cuenta'.
-                                      format(intento+1))
+            ValidacionesHTML.log.info('Se realizara el intento numero {} para ingresar al buzon de entrada '
+                                      'de la cuenta'.format(intento+1))
+
             try:
                 boton_inicio_sesion = None
                 driver.delete_all_cookies()
@@ -220,18 +221,17 @@ class ValidacionesHTML:
 
                 # num_random = randint(1,1000)
                 # driver.save_screenshot('./Logs/{}_0.png'.format(num_random))
-                time.sleep(3)
+                time.sleep(1)
                 input_usuario.send_keys(correo.correo)
                 # driver.save_screenshot('./Logs/{}_1.png'.format(num_random))
-                time.sleep(3)
+                time.sleep(1)
                 input_password.send_keys(correo.password)
                 # driver.save_screenshot('./Logs/{}_2.png'.format(num_random))
-
-                time.sleep(2)
+                time.sleep(1)
                 boton_inicio_sesion.click()
                 # driver.save_screenshot('./Logs/{}_5.png'.format(num_random))
 
-                time.sleep(30)
+                time.sleep(10)
                 # driver.save_screenshot('./Logs/{}_6.png'.format(num_random))
 
                 # se verifica si encuentra al menos las carpetas en la bandeja

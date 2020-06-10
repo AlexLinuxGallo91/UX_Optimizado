@@ -342,8 +342,23 @@ class AccionesHtml:
             result_navegacion_carpetas = ValidacionesHTML.intento_ingreso_nuevamente_al_portal(
                 result_navegacion_carpetas, correo, driver, step_evaluacion='Navegacion carpetas y buzon de entrada')
 
-        # verifica se tenga al menos una carpeta
-        if len(lista_carpetas) == 0:
+        # verifica si aun se sigue mostrando el mensaje de error en la plataforma, en caso contrario la prueba falla
+        # y notificaria al cliente de presentar un error de plataforma
+
+        if ValidacionesHTML.verificar_error_plataforma(driver):
+
+            result_navegacion_carpetas.finalizar_tiempo_de_ejecucion()
+            result_navegacion_carpetas.establecer_tiempo_de_ejecucion()
+            result_navegacion_carpetas.validacion_correcta = False
+            msg_error = ValidacionesHTML.obtener_mensaje_error_plataforma(driver)
+            result_navegacion_carpetas.mensaje_error = constantes_webdriver_actions. \
+                NAVEGACION_CARPETAS_SEG_MSG_ERROR_PLATAFORMA_OWA.format(msg_error)
+
+            result_list.result_validacion_navegacion_carpetas = result_navegacion_carpetas
+
+            return result_list
+
+        elif len(lista_carpetas) == 0:
 
             result_navegacion_carpetas.finalizar_tiempo_de_ejecucion()
             result_navegacion_carpetas.establecer_tiempo_de_ejecucion()
@@ -354,21 +369,6 @@ class AccionesHtml:
             result_list.result_validacion_navegacion_carpetas = result_navegacion_carpetas
 
             AccionesHtml.log.error(constantes_webdriver_actions.NAVEGACION_CARPETAS_SEG_LOG_ERROR_LISTA_CARPETAS_VACIA)
-
-            return result_list
-
-        # verifica que no haya algun mensaje de error en la plataforma, en caso contrario se muestra el mensaje de error
-        # que aparace en la plataforma dentro del result
-        elif ValidacionesHTML.verificar_error_plataforma(driver):
-
-            result_navegacion_carpetas.finalizar_tiempo_de_ejecucion()
-            result_navegacion_carpetas.establecer_tiempo_de_ejecucion()
-            result_navegacion_carpetas.validacion_correcta = False
-            msg_error = ValidacionesHTML.obtener_mensaje_error_plataforma(driver)
-            result_navegacion_carpetas.mensaje_error = constantes_webdriver_actions. \
-                NAVEGACION_CARPETAS_SEG_MSG_ERROR_PLATAFORMA_OWA.format(msg_error)
-
-            result_list.result_validacion_navegacion_carpetas = result_navegacion_carpetas
 
             return result_list
 
@@ -511,10 +511,10 @@ class AccionesHtml:
             # intenta salir de la sesion ejecutando un script js el cual simula un clic en el boton de cierre de sesion
 
             if AccionesHtml.owa_descubierto == 2010:
-                time.sleep(6)
+                time.sleep(4)
                 elemento_html_btn_cerrar_sesion = webdriver.find_element_by_id(
                     constantes_webdriver_actions.CERRAR_SESION_CIERRE_SESION_ID_BTN_CIERRE_SESION_OWA_2010)
-                time.sleep(2)
+                time.sleep(4)
                 elemento_html_btn_cerrar_sesion.click()
                 time.sleep(4)
             elif AccionesHtml.owa_descubierto == 2016:
